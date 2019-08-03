@@ -3,17 +3,19 @@ DDNS Script
 
 Script to update a domain record by "A" type of domains hosted in DigitalOcean
 
-@author Caio Tomich / caiotomich@gmail.com / 38 99138-3931
-@version 1.2.1
-@since v1.2.1, 2019-07-27;
+@author Caio Tomich / caiotomich@gmail.com
+@version 1.3.3
+@since v1.0.0, 2019-07-27;
 """
 import requests
+import datetime
 
 config = {
     'domain': 'domain.com',
     'domain_name': '',
     'token': 'Bearer TOKEN'
 }
+log_msg = []
 
 
 def get_external_ip():
@@ -58,22 +60,35 @@ def update_domain_record(config, record, external_ip):
     )
 
 
+def log(msg):
+    with open('./ddns-log.txt', 'a') as out:
+        out.write(msg + '\n')
+
+    print(msg)
+
+
+log("\n---\n\n" + str(datetime.datetime.today()))
+log("\nDatagenio - DDNS Script\n")
+
+log("Domain: %s" % config['domain'])
+log("Domain Name: %s" % config['domain_name'])
+
 # load external ip
 external_ip = get_external_ip()
-print("External IP: ", external_ip['ip'])
+log("\nExternal IP: %s" % external_ip['ip'])
 
 # load DigitalOcean record information
 domain_record = get_domain_record(config)
-print("Domain Record IP: ", domain_record['data'])
+log("Domain Record IP: %s\n" % domain_record['data'])
 
 # compare external ip and record ip
 if domain_record['data'] == external_ip['ip']:
     # if equal, exit program
-    print("External IP is the same that domain record IP.")
+    log("External IP is the same that domain record IP.")
 else:
     # if not equal, update IP record in DigitalOcean
     r = update_domain_record(config, domain_record, external_ip)
     if r.status_code == 200:
-        print("Domain record IP updated successfully.")
+        log("Domain record IP updated successfully.")
     else:
-        print("Error: ", r.text)
+        log("Error: %s" % r.text)
